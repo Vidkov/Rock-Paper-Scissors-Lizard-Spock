@@ -1,4 +1,6 @@
 extends Control
+var showing_result := false
+
 enum {
 	ROCK,
 	PAPER,
@@ -7,52 +9,68 @@ enum {
 	SPOCK
 }
 
-const WINS := {
-	ROCK:     [SCISSORS, LIZARD],
-	PAPER:    [ROCK, SPOCK],
-	SCISSORS: [PAPER, LIZARD],
-	LIZARD:   [PAPER, SPOCK],
-	SPOCK:    [ROCK, SCISSORS]
-}
-
 var input_locked := false
-var hand1= -1;
-var hand2= -1;
-var turn=1; #odd if player 1, even if player 2
 
 @onready var result_label := $ResultLabel
+@onready var network := NetworkManager
 
-func resetboard() -> void:
-	input_locked= true
-	hand1=-1
-	hand2=-1
-	turn=1
-	await get_tree().create_timer(0.8).timeout
-	input_locked= false
-	result_label.text = "Waiting for players..."
+func _ready():
+	print(
+	"[UI] NetworkManager:",
+	network,
+	" path:",
+	network.get_path()
+)
+	$MainLayout/Rock.pressed.connect(_on_choice_pressed.bind(ROCK))
+	$MainLayout/Paper.pressed.connect(_on_choice_pressed.bind(PAPER))
+	$MainLayout/Scissors.pressed.connect(_on_choice_pressed.bind(SCISSORS))
+	$MainLayout/Lizard.pressed.connect(_on_choice_pressed.bind(LIZARD))
+	$MainLayout/Spock.pressed.connect(_on_choice_pressed.bind(SPOCK))
 
-func resolve_round() -> void:
-	#edge case crash handler
-	if hand1 == -1 or hand2 == -1:
-		return
-		
-	if hand1==hand2:
-		result_label.text= "Draw!"
-	elif hand2 in WINS[hand1]:
-		result_label.text= "Player 1 Wins!"
-	else:
-		result_label.text= "Player 2 Wins!"
-	await resetboard()
+	# Listen to network results
+	network.round_resolved.connect(_on_round_resolved)
 
-func _on_choice_pressed(choice: int) -> void:
+	result_label.text = "Make your choice!"
+
+func _on_choice_pressed(choice: int):
+	print("[UI] Button pressed. Peer:", multiplayer.get_unique_id(), " Choice:", choice)
+
 	if input_locked:
+		print("[UI] Input locked, returning")
 		return
-	match turn % 2:
-		1:
-			result_label.text = "Waiting for opponent..."
-			hand1 = choice
-			turn+=1
-		0:
-			hand2 = choice
-			resolve_round()
-			return
+
+	if not multiplayer.has_multiplayer_peer():
+		print("[UI] No multiplayer peer, returning")
+		return
+
+	input_locked = true
+	result_label.text = "Waiting for opponent..."
+
+	print("[UI] Sending submit_choice RPC")
+	network.rpc("submit_choice", choice)
+
+
+
+
+func _on_round_resolved(p1_id, c1, p2_id, c2, winner_id):
+	if showing_result:
+		return
+
+	showing_result = true
+	input_locked = true
+
+	var my_id := multiplayer.get_unique_id()
+
+	if winner_id == 0:
+		result_label.text = "Draw!"
+	elif winner_id == my_id:
+		result_label.text = "You win!"
+	else:
+		result_label.text = "You lose!"
+
+	# Make the delay long enough to be human-visible
+	await get_tree().create_timer(2.0).timeout
+
+	result_label.text = "Make your choice!"
+	input_locked = false
+	showing_result = false

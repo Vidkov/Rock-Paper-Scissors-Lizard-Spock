@@ -32,7 +32,7 @@ offset_top = 571.0
 offset_right = 983.0
 offset_bottom = 621.0
 theme_override_font_sizes/font_size = 36
-text = "Waiting for players..."
+text = "Make your choice!"
 
 [node name="MainLayout" type="VBoxContainer" parent="."]
 layout_direction = 2
@@ -69,9 +69,3 @@ text = "Lizard"
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "Spock"
-
-[connection signal="pressed" from="MainLayout/Rock" to="." method="_on_choice_pressed" binds= [0]]
-[connection signal="pressed" from="MainLayout/Paper" to="." method="_on_choice_pressed" binds= [1]]
-[connection signal="pressed" from="MainLayout/Scissors" to="." method="_on_choice_pressed" binds= [2]]
-[connection signal="pressed" from="MainLayout/Lizard" to="." method="_on_choice_pressed" binds= [3]]
-[connection signal="pressed" from="MainLayout/Spock" to="." method="_on_choice_pressed" binds= [4]]

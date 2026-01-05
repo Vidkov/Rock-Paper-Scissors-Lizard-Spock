@@ -14,3 +14,15 @@ config/name="Rock Paper Scissors Lizard Spock"
 run/main_scene="res://control.tscn"
 config/features=PackedStringArray("4.5", "Forward Plus")
 config/icon="res://icon.svg"
+
+[autoload]
+
+NetworkManager="*res://NetworkManager.gd"
+
+[editor]
+
+version_control/autoload_on_startup=true
+
+[rendering]
+
+limits/autoload_on_startup=false
