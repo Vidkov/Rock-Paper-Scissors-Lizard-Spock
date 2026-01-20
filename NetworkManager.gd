@@ -1,6 +1,10 @@
 extends Node
 
+signal client_ready
 signal round_resolved(p1_id, c1, p2_id, c2, winner_id)
+
+const DEFAULT_PORT := 8910
+const MAX_PLAYERS := 2
 
 enum Choice {
 	ROCK,
@@ -10,83 +14,118 @@ enum Choice {
 	SPOCK
 }
 
-const DEFAULT_PORT := 8910
-const MAX_PLAYERS := 2
-
 var peer: ENetMultiplayerPeer
 var player_choices := {}
+var last_connect_address := ""
+var mode := "none"
 
+func _on_peer_disconnected(_id):
+	if multiplayer.is_server():
+		player_choices.clear()
+		
 func _ready():
-	print(
-		"[NM] DisplayServer:",
-		DisplayServer.get_name(),
-		" is_server:",
-		multiplayer.is_server()
-	)
+	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
+	print("[NM] Ready")
+	print("[NM] Instance path:", get_path())
 
-	if DisplayServer.get_name() == "headless":
-		print("[NM] Starting as SERVER")
-		_start_server()
-	else:
-		print("[NM] Starting as CLIENT")
-		join_game("127.0.0.1")
-
-
-@rpc("any_peer", "reliable", "call_remote")
-func submit_choice(choice: int):
-	print(
-		"[SERVER?] submit_choice called on peer:",
-		multiplayer.get_unique_id(),
-		" sender:",
-		multiplayer.get_remote_sender_id(),
-		" choice:",
-		choice
-	)
-
-	if not multiplayer.is_server():
-		print("[ERROR] submit_choice executed on non-server")
+func host_game():
+	if mode != "none":
 		return
+	mode = "host"
+	_start_server()
+	client_ready.emit()
 
-	var sender_id := multiplayer.get_remote_sender_id()
-	player_choices[sender_id] = choice
 
-	print("[SERVER] Current player_choices:", player_choices)
+func join_game_at(address: String):
+	if mode != "none":
+		return
+	mode = "client"
 
-	if player_choices.size() == 2:
-		print("[SERVER] Two choices received, resolving round")
-		_resolve_round()
+	var host := address.strip_edges()
+	var port := DEFAULT_PORT
+
+	if ":" in host:
+		var parts = host.split(":")
+		host = parts[0]
+		if parts.size() > 1 and parts[1].is_valid_int():
+			port = int(parts[1])
+
+	_join_game(host, port)
+
+func go_to_game_scene():
+	get_tree().change_scene_to_file("res://Game.tscn")
 
 func _start_server():
 	peer = ENetMultiplayerPeer.new()
 	peer.create_server(DEFAULT_PORT, MAX_PLAYERS)
 	multiplayer.multiplayer_peer = peer
-	print("Server started")
 
+	last_connect_address = _get_local_ip()
+	print("[NM] Host address set to:", last_connect_address)
+
+func _join_game(host: String, port: int):
+	peer = ENetMultiplayerPeer.new()
+	var err := peer.create_client(host, port)
+	if err != OK:
+		print("[NM] Client create failed:", err)
+		mode = "none"
+		return
+
+	multiplayer.multiplayer_peer = peer
+	multiplayer.connected_to_server.connect(_on_connected)
+	multiplayer.connection_failed.connect(_on_connect_failed)
+
+func _on_connected():
+	print("[NM] Connected to server")
+	client_ready.emit()
+
+func _on_connect_failed():
+	print("[NM] Connection failed")
+	mode = "none"
+
+
+
+@rpc("any_peer", "reliable")
+func submit_choice(choice: int):
+	if not multiplayer.is_server():
+		return
+
+	var sender_id := multiplayer.get_remote_sender_id()
+	player_choices[sender_id] = choice
+
+	if player_choices.size() == 2:
+		_resolve_round()
 
 func _resolve_round():
-	print("[SERVER] _resolve_round called")
 	var ids := player_choices.keys()
-	print("[SERVER] Player IDs:", ids)
+	if ids.size() < 2:
+		return
+
 	var p1_id: int = ids[0]
 	var p2_id: int = ids[1]
 	var c1: int = player_choices[p1_id]
 	var c2: int = player_choices[p2_id]
 
 	var winner_id := _determine_winner(p1_id, c1, p2_id, c2)
-	print("[SERVER] Winner:", winner_id)
 
-	player_choices.clear()
-	print("[SERVER] Sending round_result RPC")
 	rpc("round_result", p1_id, c1, p2_id, c2, winner_id)
+	player_choices.clear()
 
-@rpc("authority", "reliable", "call_remote")
+@rpc("any_peer", "reliable")
 func round_result(p1_id, c1, p2_id, c2, winner_id):
-	print(
-		"[ROUND_RESULT] Received on peer:",
-		multiplayer.get_unique_id()," p1:", p1_id, " p2:", p2_id, " winner:", winner_id)
-
 	round_resolved.emit(p1_id, c1, p2_id, c2, winner_id)
 
+
+func _get_local_ip() -> String:
+	for ip in IP.get_local_addresses():
+		if ip.contains(":"):
+			continue
+		if ip.begins_with("127."):
+			continue
+		if ip.begins_with("169.254."):
+			continue
+		return ip
+	return "127.0.0.1"
 
 func _determine_winner(p1_id, c1, p2_id, c2) -> int:
 	if c1 == c2:
@@ -101,16 +140,3 @@ func _determine_winner(p1_id, c1, p2_id, c2) -> int:
 	}
 
 	return p1_id if c2 in wins[c1] else p2_id
-
-func join_game(address: String, port := DEFAULT_PORT):
-	peer = ENetMultiplayerPeer.new()
-	peer.create_client(address, port)
-	multiplayer.multiplayer_peer = peer
-
-	await multiplayer.connected_to_server
-
-	print(
-		"[NM] CLIENT CONNECTED:",
-		"is_server:", multiplayer.is_server(),
-		" peer_id:", multiplayer.get_unique_id()
-	)

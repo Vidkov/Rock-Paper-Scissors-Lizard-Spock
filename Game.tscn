@@ -1,0 +1,131 @@
+[gd_scene load_steps=3 format=3 uid="uid://bn000lac3p541"]
+
+[ext_resource type="Script" uid="uid://cbbjuumlx2b8p" path="res://Main.gd" id="1_wbfu4"]
+
+[sub_resource type="FontFile" id="FontFile_wbfu4"]
+cache/0/16/0/ascent = 0.0
+cache/0/16/0/descent = 0.0
+cache/0/16/0/underline_position = 0.0
+cache/0/16/0/underline_thickness = 0.0
+cache/0/16/0/scale = 1.0
+cache/0/17/0/ascent = 0.0
+cache/0/17/0/descent = 0.0
+cache/0/17/0/underline_position = 0.0
+cache/0/17/0/underline_thickness = 0.0
+cache/0/17/0/scale = 1.0
+cache/0/18/0/ascent = 0.0
+cache/0/18/0/descent = 0.0
+cache/0/18/0/underline_position = 0.0
+cache/0/18/0/underline_thickness = 0.0
+cache/0/18/0/scale = 1.0
+cache/0/19/0/ascent = 0.0
+cache/0/19/0/descent = 0.0
+cache/0/19/0/underline_position = 0.0
+cache/0/19/0/underline_thickness = 0.0
+cache/0/19/0/scale = 1.0
+
+[node name="Control" type="Control"]
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 11.0
+offset_top = 8.0
+offset_right = 11.0
+offset_bottom = 8.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+script = ExtResource("1_wbfu4")
+
+[node name="ClickCatcher" type="Control" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TitleHead" type="Label" parent="."]
+layout_mode = 0
+offset_left = 456.0
+offset_top = 8.0
+offset_right = 1732.0
+offset_bottom = 77.0
+theme_override_font_sizes/font_size = 40
+text = "Rock, Paper, Scissors, Lizard, Spock"
+
+[node name="ResultLabel" type="Button" parent="."]
+layout_mode = 0
+offset_left = 705.0
+offset_top = 569.0
+offset_right = 1028.0
+offset_bottom = 627.0
+theme_override_font_sizes/font_size = 36
+text = "Make your choice!"
+
+[node name="SelectedIcon" type="Sprite2D" parent="."]
+position = Vector2(881, 374.00003)
+scale = Vector2(0.45, 0.45)
+
+[node name="SelectedText" type="Label" parent="."]
+layout_mode = 0
+offset_left = 716.0
+offset_top = 272.0
+offset_right = 836.0
+offset_bottom = 308.0
+theme_override_font_sizes/font_size = 26
+
+[node name="MainLayout" type="VBoxContainer" parent="."]
+layout_direction = 2
+layout_mode = 0
+offset_left = 12.0
+offset_top = 258.0
+offset_right = 135.0
+offset_bottom = 568.0
+theme_override_constants/separation = 15
+alignment = 1
+
+[node name="Rock" type="Button" parent="MainLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 30
+text = "Rock"
+
+[node name="Paper" type="Button" parent="MainLayout"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "Paper"
+
+[node name="Scissors" type="Button" parent="MainLayout"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "Scissors"
+
+[node name="Lizard" type="Button" parent="MainLayout"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "Lizard"
+
+[node name="Spock" type="Button" parent="MainLayout"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "Spock"
+
+[node name="AddressBox" type="HBoxContainer" parent="."]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+theme_override_constants/separation = 15
+
+[node name="AddressToggle" type="Button" parent="AddressBox"]
+layout_mode = 2
+theme_override_fonts/font = SubResource("FontFile_wbfu4")
+theme_override_font_sizes/font_size = 19
+text = "(Click to view your host address)"
+
+[node name="CopyButton" type="Button" parent="AddressBox"]
+layout_mode = 2
+text = "Copy"

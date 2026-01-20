@@ -11,13 +11,18 @@ config_version=5
 [application]
 
 config/name="Rock Paper Scissors Lizard Spock"
-run/main_scene="res://control.tscn"
+run/main_scene="uid://wmbp7xwqoxcc"
 config/features=PackedStringArray("4.5", "Forward Plus")
 config/icon="res://icon.svg"
 
 [autoload]
 
 NetworkManager="*res://NetworkManager.gd"
+SceneTransitionDaemon="*res://SceneTransitionDaemon.gd"
+
+[display]
+
+window/size/viewport_height=666
 
 [editor]
 

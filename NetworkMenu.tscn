@@ -1,0 +1,64 @@
+[gd_scene load_steps=2 format=3 uid="uid://wmbp7xwqoxcc"]
+
+[ext_resource type="Script" uid="uid://c6e4w1wfwnnj5" path="res://MainMenu.gd" id="1_wir62"]
+
+[node name="NetworkMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_wir62")
+
+[node name="HostButton" type="Button" parent="."]
+layout_mode = 0
+offset_left = 521.0
+offset_top = 285.0
+offset_right = 674.0
+offset_bottom = 330.0
+theme_override_font_sizes/font_size = 27
+text = "Host Game"
+
+[node name="JoinButton" type="Button" parent="."]
+layout_mode = 0
+offset_left = 521.0
+offset_top = 341.0
+offset_right = 608.0
+offset_bottom = 372.0
+theme_override_font_sizes/font_size = 29
+text = "Join Game"
+
+[node name="TitleHead" type="Label" parent="."]
+layout_mode = 0
+offset_left = 456.0
+offset_top = 8.0
+offset_right = 1732.0
+offset_bottom = 77.0
+theme_override_font_sizes/font_size = 40
+text = "Rock, Paper, Scissors, Lizard, Spock"
+
+[node name="AddressBox" type="HBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 527.0
+offset_top = 346.0
+offset_right = 677.0
+offset_bottom = 386.0
+theme_override_constants/separation = 9
+
+[node name="AddressField" type="LineEdit" parent="AddressBox"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+
+[node name="SubmitButton" type="Button" parent="AddressBox"]
+visible = false
+layout_mode = 2
+theme_override_font_sizes/font_size = 29
+text = "Submit"
+
+[node name="ClickCatcher" type="Control" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
