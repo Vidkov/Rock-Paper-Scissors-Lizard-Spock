@@ -88,7 +88,7 @@ func _on_result_label_pressed():
 	input_locked = true
 	result_label.disabled = true
 	result_label.text = "Waiting for opponent…"
-	network.rpc("submit_choice", selected_choice)
+	network.send_choice(selected_choice)
 
 func _on_round_resolved(p1_id, c1, p2_id, c2, winner_id):
 	if showing_result:

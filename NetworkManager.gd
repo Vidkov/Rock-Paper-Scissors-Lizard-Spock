@@ -2,9 +2,11 @@ extends Node
 
 signal client_ready
 signal round_resolved(p1_id, c1, p2_id, c2, winner_id)
+var connected_players := []
 
 const DEFAULT_PORT := 8910
 const MAX_PLAYERS := 2
+const SERVER_ID := 1
 
 enum Choice {
 	ROCK,
@@ -19,21 +21,30 @@ var player_choices := {}
 var last_connect_address := ""
 var mode := "none"
 
-func _on_peer_disconnected(_id):
-	if multiplayer.is_server():
-		player_choices.clear()
-		
 func _ready():
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
 	print("[NM] Ready")
 	print("[NM] Instance path:", get_path())
+	multiplayer.peer_connected.connect(_on_peer_connected)
+
+func _on_peer_connected(id):
+	if multiplayer.is_server():
+		connected_players.append(id)
+		print("[NM] Peer connected:", id)
+
+func _on_peer_disconnected(id):
+	if multiplayer.is_server():
+		connected_players.erase(id)
+		player_choices.clear()
+
 
 func host_game():
 	if mode != "none":
 		return
 	mode = "host"
 	_start_server()
-	client_ready.emit()
+	if not multiplayer.is_server():
+		client_ready.emit()
 
 
 func join_game_at(address: String):
@@ -85,16 +96,38 @@ func _on_connect_failed():
 
 
 
-@rpc("any_peer", "reliable")
-func submit_choice(choice: int):
+# --- FIXED ENTRY POINT FOR UI ---
+
+func send_choice(choice: int):
+	if not multiplayer.multiplayer_peer:
+		return
+	rpc_id(1, "_submit_choice_server", choice)
+
+
+
+# --- SERVER LOGIC ---
+
+@rpc("any_peer", "reliable", "call_local")
+
+func _submit_choice_server(choice: int):
 	if not multiplayer.is_server():
 		return
 
 	var sender_id := multiplayer.get_remote_sender_id()
-	player_choices[sender_id] = choice
+	if sender_id == 0:
+		sender_id = multiplayer.get_unique_id()
 
 	if player_choices.size() == 2:
 		_resolve_round()
+
+
+	player_choices[sender_id] = choice
+
+
+	if player_choices.size() == 2:
+		_resolve_round()
+
+
 
 func _resolve_round():
 	var ids := player_choices.keys()
@@ -111,9 +144,13 @@ func _resolve_round():
 	rpc("round_result", p1_id, c1, p2_id, c2, winner_id)
 	player_choices.clear()
 
-@rpc("any_peer", "reliable")
+
+
+@rpc("any_peer", "reliable", "call_local")
+
 func round_result(p1_id, c1, p2_id, c2, winner_id):
 	round_resolved.emit(p1_id, c1, p2_id, c2, winner_id)
+
 
 
 func _get_local_ip() -> String:
@@ -126,6 +163,8 @@ func _get_local_ip() -> String:
 			continue
 		return ip
 	return "127.0.0.1"
+
+
 
 func _determine_winner(p1_id, c1, p2_id, c2) -> int:
 	if c1 == c2:
